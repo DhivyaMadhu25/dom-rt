@@ -20,25 +20,24 @@ const bcrypt = require('bcrypt');
 const { Pool } = require('pg');
 const crypto = require('crypto');
 
-// Validate required environment variables
+// If environment variables are missing, warn but continue with sensible defaults
 const required = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
 const missing = required.filter(k => !process.env[k]);
 if (missing.length > 0) {
-  console.error(`[Setup] Missing required environment variables: ${missing.join(', ')}`);
-  console.error('[Setup] Copy .env.example to .env and fill in values first.');
-  process.exit(1);
+  console.warn(`[Setup] Warning: missing environment variables: ${missing.join(', ')}. Using reasonable defaults where possible.`);
+  console.warn('[Setup] Tip: copy .env.example to .env and fill in values for production use.');
 }
 
 const pool = new Pool({
-  host:     process.env.DB_HOST,
+  host:     process.env.DB_HOST || 'localhost',
   port:     parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME,
-  user:     process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME || 'domrt',
+  user:     process.env.DB_USER || 'domrt_user',
+  password: process.env.DB_PASSWORD || 'domrt_secret',
 });
 
-// Demo password — clearly marked as dev-only
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'DomRT_Demo_2026!';
+// Demo password — use env override or fall back to the README/example demo password
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD || process.env.DEFAULT_PASSWORD || 'Password123!';
 
 async function setup() {
   console.log('\n[Setup] DOM-RT Database Setup');
