@@ -32,7 +32,7 @@ export const options = {
 // Login once per VU
 export function setup() {
   const res = http.post(`${BASE_URL}/api/auth/login`,
-    JSON.stringify({ username:'admin', password:'Password123!' }),
+    JSON.stringify({ username:'admin', password:'DomRT_Demo_2026!' }),
     { headers: { 'Content-Type':'application/json' } }
   );
   check(res, { 'login ok': r => r.status === 200 });

@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const { initWebSocket, getConnectedCount } = require('./services/websocket');
 const { generateBenchmarkData }            = require('./benchmark/generator');
+const { waitForDb }                        = require('./db/pool');
 
 const reportRouter   = require('./routes/report');
 const { startScheduler } = require('./services/auto-reporter');
@@ -87,20 +88,31 @@ app.post('/api/benchmark/run', async (req, res) => {
   }
 });
 
-// ── WebSocket ────────────────────────────────────────────
-initWebSocket(server);
-
-// ── Auto-scheduler (sites self-report every 60s) ─────────
-if (process.env.AUTO_SCHEDULER !== 'false') {
-  startScheduler(60);
-}
-
 // ── Start ────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || '4000');
-server.listen(PORT, () => {
-  console.log(`\n  DOM-RT Backend running on http://localhost:${PORT}`);
-  console.log(`  WebSocket ready on ws://localhost:${PORT}`);
-  console.log(`  Health: http://localhost:${PORT}/health\n`);
+
+async function start() {
+  // Wait for PostgreSQL before accepting any requests
+  await waitForDb(5, 3000);
+
+  // WebSocket
+  initWebSocket(server);
+
+  // Auto-scheduler
+  if (process.env.AUTO_SCHEDULER !== 'false') {
+    startScheduler(60);
+  }
+
+  server.listen(PORT, () => {
+    console.log(`\n  DOM-RT Backend running on http://localhost:${PORT}`);
+    console.log(`  WebSocket ready on ws://localhost:${PORT}`);
+    console.log(`  Health: http://localhost:${PORT}/health\n`);
+  });
+}
+
+start().catch(err => {
+  console.error('Failed to start server:', err.message);
+  process.exit(1);
 });
 
 module.exports = { app, server };

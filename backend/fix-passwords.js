@@ -37,7 +37,7 @@ const pool = new Pool({
 });
 
 // Demo password — use env override or fall back to the README/example demo password
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD || process.env.DEFAULT_PASSWORD || 'Password123!';
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD || process.env.DEFAULT_PASSWORD || 'DomRT_Demo_2026!';
 
 async function setup() {
   console.log('\n[Setup] DOM-RT Database Setup');

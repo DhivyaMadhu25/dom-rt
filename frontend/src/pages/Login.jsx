@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function Login() {
   const { login }    = useAuth();
   const navigate     = useNavigate();
-  const [form, setForm]   = useState({ username:'admin', password:'Password123!' });
+  const [form, setForm]   = useState({ username:'admin', password:'DomRT_Demo_2026!' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -74,7 +74,7 @@ export default function Login() {
           <div style={{ marginTop:20, color:'#475569', fontSize:12, textAlign:'center', lineHeight:1.6 }}>
             Demo accounts:<br />
             admin / manager1 / auditor1 / viewer1<br />
-            Password: Password123!
+            Password: DomRT_Demo_2026!
           </div>
         </form>
       </div>
