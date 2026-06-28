@@ -1,0 +1,83 @@
+# DOM-RT Docker Compose
+# ─────────────────────────────────────────────────────────
+# BEFORE RUNNING:
+#   1. Copy the env file:  cp .env.docker.example .env.docker
+#   2. Fill in all <CHANGE_THIS> values in .env.docker
+#   3. Run:  docker-compose --env-file .env.docker up --build
+# ─────────────────────────────────────────────────────────
+
+services:
+  postgres:
+    image: postgres:16.2-alpine
+    container_name: dom-rt-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./backend/src/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dom-rt-backend
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 4000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      AI_SERVICE_URL: http://ai:5001
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      AUTO_SCHEDULER: ${AUTO_SCHEDULER:-true}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/src:/app/src
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dom-rt-frontend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:4000}
+      VITE_WS_URL: ${VITE_WS_URL:-http://localhost:4000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/src:/app/src
+
+  ai:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    container_name: dom-rt-ai
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./ai:/app
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
